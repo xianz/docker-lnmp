@@ -1,7 +1,7 @@
-ARG NGINX_VERSION
-FROM daocloud.io/library/nginx:${NGINX_VERSION}-alpine
+ARG NGINX_TAG
+
+FROM docker.io/library/nginx:${NGINX_TAG}
 
 ### set timezome
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-

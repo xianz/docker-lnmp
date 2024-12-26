@@ -1,97 +1,86 @@
-version: '3'
-# chmod 777 redis/redis.log
-# chmod 777 redis/data
-# chmod 777 mysql/data
+
 services:
   nginx:
-    build: 
+    build:
       context: ./nginx
       args:
-        NGINX_VERSION: $NGINX_VERSION
+        NGINX_TAG: $NGINX_TAG
     depends_on:
       - php
-    ports: 
+    ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./www:/usr/share/nginx/html
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/cert:/etc/nginx/cert
+#      - ./nginx/cert:/etc/nginx/cert
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/log/error.log:/var/log/nginx/error.log
+      - ./nginx/log:/var/log/nginx
     networks:
       - frontend
     restart: always
     container_name: nginx
 
   php:
-    build: 
-      context: ./php
+    build:
+      context: ./php81
       args:
-        PHP_VERSION: $PHP_VERSION
-        SWOOLE_VERSION: $SWOOLE_VERSION
-        AMQP_VERSION: $AMQP_VERSION
+        PHP_TAG: $PHP_TAG
+        PHP_REDIS_VERSION: $PHP_REDIS_VERSION
+#        AMQP_VERSION: $AMQP_VERSION
     ports:
       - "9501:9501"
     volumes:
       - ./www:/var/www/html
-      - ./php/config/php.ini:/usr/local/etc/php/php.ini
-      - ./php/config/php-fpm.conf:/usr/local/etc/php-fpm.conf
-      - ./php/config/php-fpm.d:/usr/local/etc/php-fpm.d
+      - ./php81/config/php.ini:/usr/local/etc/php/php.ini
+      - ./php81/config/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./php81/config/php-fpm.d:/usr/local/etc/php-fpm.d
     networks:
       - frontend
-      - backend  
+      - backend
     restart: always
     container_name: php
 
+
   mysql:
-    build: ./mysql
+#    build:
+#      context: ./mysql
+#      args:
+#        MYSQL_TAG: $MYSQL_TAG
+    image: mysql:$MYSQL_TAG
+    user: "1001:1001"
     ports:
       - "3306:3306"
     volumes:
       - ./mysql/data:/var/lib/mysql
-      - ./mysql/my.cnf:/etc/my.cnf
+#      - ./mysql/my.cnf:/etc/my.cnf
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
     networks:
       - backend
     restart: always
+    privileged: true
     container_name: mysql
 
+
   redis:
-    build: ./redis
+    build:
+      context: ./redis
+      args:
+        REDIS_TAG: $REDIS_TAG
     ports:
       - "6379:6379"
-    volumes:
-      - ./redis/redis.conf/:/usr/local/etc/redis.conf
-      - ./redis/data:/usr/local/redis/data
-      - ./redis/redis.log:/usr/local/redis/redis.log
+#    volumes:
+#      - ./redis/redis.conf/:/usr/local/etc/redis.conf
+#      - ./redis/data:/usr/local/redis/data
+#      - ./redis/redis.log:/usr/local/redis/redis.log
     networks:
       - backend
     restart: always
     container_name: redis
-  
-  rabbitmq:
-    #容器名称
-    container_name: rabbitmq
-    #镜像名称
-    image: rabbitmq:3.8.3
-    #总是重启后启动
-    restart: always
-    #端口映射
-    ports:
-      - 5672:5672
-      - 15672:15672
-    #挂载
-    volumes:
-      - ./rabbitmq/data:/var/lib/rabbitmq
-    #环境变量
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=123456
-    networks:
-      - backend
+
+
 networks:
   frontend:
   backend:
-    
+

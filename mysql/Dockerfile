@@ -1,1 +1,3 @@
-FROM daocloud.io/library/mysql:latest
+ARG MYSQL_TAG
+
+FROM docker.io/library/mysql:$MYSQL_TAG
